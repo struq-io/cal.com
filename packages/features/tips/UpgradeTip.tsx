@@ -1,18 +1,12 @@
-import { useMemo } from "react";
 import type { ReactNode } from "react";
 
 import { classNames } from "@calcom/lib";
-import { useHasTeamPlan } from "@calcom/lib/hooks/useHasTeamPlan";
+import { useHasTeamPlan } from "@calcom/lib/hooks/useHasPaidPlan";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
-// import isCalcom from "@calcom/lib/isCalcom";
-import { trpc } from "@calcom/trpc/react";
-import { EmptyScreen, Icon } from "@calcom/ui";
+import { useGetTheme } from "@calcom/lib/hooks/useTheme";
+import { trpc } from "@calcom/trpc";
 
-import TeamList from "../ee/teams/components/TeamList";
-
-const isCalcom = true;
 export function UpgradeTip({
-  dark,
   title,
   description,
   background,
@@ -20,66 +14,63 @@ export function UpgradeTip({
   buttons,
   isParentLoading,
   children,
+  plan,
 }: {
-  dark?: boolean;
   title: string;
   description: string;
+  /* overwrite EmptyScreen text */
   background: string;
   features: Array<{ icon: JSX.Element; title: string; description: string }>;
   buttons?: JSX.Element;
   /**Chldren renders when the user is in a team */
-  children: JSX.Element;
+  children: ReactNode;
   isParentLoading?: ReactNode;
+  plan: "team" | "enterprise";
 }) {
-  const { data } = trpc.viewer.teams.list.useQuery();
-
-  const invites = useMemo(() => data?.filter((m) => !m.accepted) || [], [data]);
+  const { resolvedTheme } = useGetTheme();
   const { t } = useLocale();
-  const { isLoading, hasTeamPlan } = useHasTeamPlan();
+  const { isPending, hasTeamPlan } = useHasTeamPlan();
+  const { data } = trpc.viewer.teams.getUpgradeable.useQuery();
+  const imageSrc = `${background}${resolvedTheme === "dark" ? "-dark" : ""}.jpg`;
 
-  if (hasTeamPlan) return children;
+  const hasEnterprisePlan = false;
+  //const { isPending , hasEnterprisePlan } = useHasEnterprisePlan();
 
-  if (!isCalcom)
-    return <EmptyScreen Icon={Icon.FiUsers} headline={title} description={description} buttonRaw={buttons} />;
+  const hasUnpublishedTeam = !!data?.[0];
 
-  if (isParentLoading || isLoading) return <>{isParentLoading}</>;
+  if (plan === "team" && (hasTeamPlan || hasUnpublishedTeam)) return <>{children}</>;
+
+  if (plan === "enterprise" && hasEnterprisePlan) return <>{children}</>;
+
+  if (isPending) return <>{isParentLoading}</>;
 
   return (
     <>
-      <div className="-mt-10 rtl:ml-4 sm:mt-0 md:rtl:ml-0 lg:-mt-6">
-        <div
-          className="flex w-full justify-between overflow-hidden rounded-lg pt-4 pb-10 md:min-h-[295px] md:pt-10"
-          style={{
-            background: `url(${background})`,
-            backgroundSize: "cover",
-            backgroundRepeat: "no-repeat",
-          }}>
-          <div className="mt-3 px-8 sm:px-14">
-            <h1 className={classNames("font-cal text-3xl", dark && "text-white")}>{t(title)}</h1>
-            <p className={classNames("my-4 max-w-sm", dark ? "text-white" : "text-gray-600")}>
-              {t(description)}
-            </p>
-            {buttons}
-          </div>
+      <div className="relative flex min-h-[295px] w-full items-center justify-between overflow-hidden rounded-lg pb-10">
+        <picture className="absolute min-h-[295px] w-full rounded-lg object-cover">
+          <source srcSet={imageSrc} media="(prefers-color-scheme: dark)" />
+          <img
+            className="absolute min-h-[295px] w-full select-none rounded-lg object-cover object-left md:object-center"
+            src={imageSrc}
+            loading="lazy"
+            alt={title}
+          />
+        </picture>
+        <div className="relative my-4 px-8 sm:px-14">
+          <h1 className={classNames("font-cal text-3xl")}>{t(title)}</h1>
+          <p className={classNames("mb-8 mt-4 max-w-sm")}>{t(description)}</p>
+          {buttons}
         </div>
-        {invites.length > 0 && (
-          <div className="my-4">
-            <h3 className="font-cal mb-4 text-xl">{t("open_invitations")}</h3>
-            <TeamList teams={invites} />
+      </div>
+
+      <div className="mt-4 grid-cols-3 md:grid md:gap-4">
+        {features.map((feature) => (
+          <div key={feature.title} className="bg-muted mb-4 min-h-[180px] w-full rounded-md  p-8 md:mb-0">
+            {feature.icon}
+            <h2 className="font-cal text-emphasis mt-4 text-lg">{feature.title}</h2>
+            <p className="text-default">{feature.description}</p>
           </div>
-        )}
-        <div className="mt-4 grid-cols-3 md:grid md:gap-4">
-          {invites.length === 0 &&
-            features.map((feature) => (
-              <div
-                key={feature.title}
-                className="mb-4 min-h-[180px] w-full rounded-md bg-gray-50 p-8 md:mb-0">
-                {feature.icon}
-                <h2 className="font-cal mt-4 text-lg">{feature.title}</h2>
-                <p className="text-gray-700">{feature.description}</p>
-              </div>
-            ))}
-        </div>
+        ))}
       </div>
     </>
   );

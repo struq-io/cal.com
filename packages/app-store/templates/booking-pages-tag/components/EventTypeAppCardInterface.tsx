@@ -5,16 +5,15 @@ import AppCard from "@calcom/app-store/_components/AppCard";
 import type { EventTypeAppCardComponent } from "@calcom/app-store/types";
 import { TextField } from "@calcom/ui";
 
-import { appDataSchema } from "../zod";
+import type { appDataSchema } from "../zod";
 
-const EventTypeAppCard: EventTypeAppCardComponent = function EventTypeAppCard({ app }) {
-  const [getAppData, setAppData] = useAppContextWithSchema<typeof appDataSchema>();
+const EventTypeAppCard: EventTypeAppCardComponent = function EventTypeAppCard({ app, eventType }) {
+  const { getAppData, setAppData } = useAppContextWithSchema<typeof appDataSchema>();
   const trackingId = getAppData("trackingId");
   const [enabled, setEnabled] = useState(getAppData("enabled"));
 
   return (
     <AppCard
-      setAppData={setAppData}
       app={app}
       switchOnClick={(e) => {
         if (!e) {
@@ -23,7 +22,8 @@ const EventTypeAppCard: EventTypeAppCardComponent = function EventTypeAppCard({ 
           setEnabled(true);
         }
       }}
-      switchChecked={enabled}>
+      switchChecked={enabled}
+      teamId={eventType.team?.id || undefined}>
       <TextField
         name="Tracking ID"
         value={trackingId}

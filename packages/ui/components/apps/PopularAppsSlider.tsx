@@ -1,5 +1,5 @@
 import { useLocale } from "@calcom/lib/hooks/useLocale";
-import { AppFrontendPayload as App } from "@calcom/types/App";
+import type { AppFrontendPayload as App } from "@calcom/types/App";
 
 import { AppCard } from "./AppCard";
 import { Slider } from "./Slider";
@@ -10,7 +10,7 @@ export const PopularAppsSlider = <T extends App>({ items }: { items: T[] }) => {
   return (
     <Slider<T>
       title={t("most_popular")}
-      items={items.filter((app) => !!app.trending)}
+      items={items.sort((a, b) => (b.installCount || 0) - (a.installCount || 0))}
       itemKey={(app) => app.name}
       options={{
         perView: 3,

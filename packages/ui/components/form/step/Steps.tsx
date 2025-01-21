@@ -1,33 +1,53 @@
 import classNames from "@calcom/lib/classNames";
-import { useLocale } from "@calcom/lib/hooks/useLocale";
 
-interface ISteps {
+type StepWithNav = {
   maxSteps: number;
   currentStep: number;
-  navigateToStep: (step: number) => void;
-}
+  nextStep: () => void;
+  disableNavigation?: false;
+  stepLabel?: (currentStep: number, maxSteps: number) => string;
+};
 
-const Steps = (props: ISteps) => {
-  const { maxSteps, currentStep, navigateToStep } = props;
-  const { t } = useLocale();
+type StepWithoutNav = {
+  maxSteps: number;
+  currentStep: number;
+  nextStep?: undefined;
+  disableNavigation: true;
+  stepLabel?: (currentStep: number, maxSteps: number) => string;
+};
+
+// Discriminative union on disableNavigation prop
+type StepsProps = StepWithNav | StepWithoutNav;
+
+const Steps = (props: StepsProps) => {
+  const {
+    maxSteps,
+    currentStep,
+    nextStep,
+    disableNavigation = false,
+    stepLabel = (currentStep, totalSteps) => `Step ${currentStep} of ${totalSteps}`,
+  } = props;
   return (
     <div className="mt-6 space-y-2">
-      <p className="text-xs font-medium text-gray-500 dark:text-white">
-        {t("current_step_of_total", { currentStep: currentStep + 1, maxSteps })}
-      </p>
-      <div className="flex w-full space-x-2 rtl:space-x-reverse">
+      <p className="text-subtle text-xs font-medium">{stepLabel(currentStep, maxSteps)}</p>
+      <div data-testid="step-indicator-container" className="flex w-full space-x-2 rtl:space-x-reverse">
         {new Array(maxSteps).fill(0).map((_s, index) => {
-          return index <= currentStep ? (
+          return index <= currentStep - 1 ? (
             <div
               key={`step-${index}`}
-              onClick={() => navigateToStep(index)}
+              onClick={() => nextStep?.()}
               className={classNames(
-                "h-1 w-full rounded-[1px] bg-black dark:bg-white",
-                index < currentStep ? "cursor-pointer" : ""
+                "bg-inverted h-1 w-full rounded-[1px]",
+                index < currentStep - 1 && !disableNavigation ? "cursor-pointer" : ""
               )}
+              data-testid={`step-indicator-${index}`}
             />
           ) : (
-            <div key={`step-${index}`} className="h-1 w-full rounded-[1px] bg-black bg-opacity-25" />
+            <div
+              key={`step-${index}`}
+              className="bg-emphasis h-1 w-full rounded-[1px] opacity-25"
+              data-testid={`step-indicator-${index}`}
+            />
           );
         })}
       </div>

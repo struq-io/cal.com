@@ -1,5 +1,5 @@
 import { createDefaultInstallation } from "@calcom/app-store/_utils/installation";
-import { AppDeclarativeHandler } from "@calcom/types/AppHandler";
+import type { AppDeclarativeHandler } from "@calcom/types/AppHandler";
 
 import appConfig from "../config.json";
 
@@ -13,8 +13,8 @@ const handler: AppDeclarativeHandler = {
     newTab: true,
     url: "https://example.com/link",
   },
-  createCredential: ({ appType, user, slug }) =>
-    createDefaultInstallation({ appType, userId: user.id, slug, key: {} }),
+  createCredential: ({ appType, user, slug, teamId }) =>
+    createDefaultInstallation({ appType, user: user, slug, key: {}, teamId }),
 };
 
 export default handler;

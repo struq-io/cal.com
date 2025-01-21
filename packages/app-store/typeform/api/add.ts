@@ -1,4 +1,4 @@
-import { AppDeclarativeHandler } from "@calcom/types/AppHandler";
+import type { AppDeclarativeHandler } from "@calcom/types/AppHandler";
 
 import { createDefaultInstallation } from "../../_utils/installation";
 import appConfig from "../config.json";
@@ -12,8 +12,8 @@ const handler: AppDeclarativeHandler = {
   redirect: {
     url: "/apps/typeform/how-to-use",
   },
-  createCredential: ({ appType, user, slug }) =>
-    createDefaultInstallation({ appType, userId: user.id, slug, key: {} }),
+  createCredential: ({ appType, user, slug, teamId }) =>
+    createDefaultInstallation({ appType, user: user, slug, key: {}, teamId }),
 };
 
 export default handler;

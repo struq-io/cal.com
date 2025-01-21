@@ -1,8 +1,8 @@
 #!/bin/sh
-# If there's a `.gitmodule` file skip this script
+# Skip if `.gitmodules` exists
 [ -f .gitmodules ] && {
-  echo ".gitmodules already initializied"
+  echo ".gitmodules already initialized"
   exit 0
 }
 
-./git-setup.sh api website console
+./git-setup.sh website console
